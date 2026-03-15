@@ -8,48 +8,47 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 界面修正：處理間距、備註高度與平行對齊 ---
+# --- CSS 終極界面修正 ---
 st.markdown("""
     <style>
-    /* 縮減頂部整體邊距 */
-    .block-container {padding-top: 0.2rem !important; max-width: 1100px;}
+    /* 1. 標題修復：解決切割問題並保持緊湊 */
+    .block-container {padding-top: 0.5rem !important; max-width: 1100px;}
     
-    /* 1. 標題與作業區間空白極小化 */
     h1 {
         text-align: center; 
-        font-size: 24px !important; 
-        margin-top: 0px !important; 
-        margin-bottom: 0px !important; 
-        padding-bottom: 0px !important;
+        font-size: 26px !important; 
+        line-height: 1.8 !important; /* 增加行高防止削頂 */
+        margin-top: 0px !important;
+        margin-bottom: 5px !important;
+        display: block !important;
     }
     
-    /* 強力縮減分頁標籤上方的空白 */
+    /* 縮減分頁標籤與標題間的空隙 */
     .stTabs [data-baseweb="tab-list"] { 
-        margin-top: -25px !important; 
+        margin-top: -15px !important; 
     }
 
     label {font-size: 14px !important; font-weight: bold !important; color: #34495e !important;}
     
-    /* 2. 備註輸入框高度微調 (單/雙行感) */
+    /* 備註輸入框高度微調 */
     .stTextArea textarea {
-        height: 28px !important; 
-        min-height: 28px !important;
-        padding: 5px !important;
+        height: 32px !important; 
+        min-height: 32px !important;
     }
 
-    /* 3. 提交按鈕樣式與平行對齊 */
+    /* 2. 提交按鈕：高度對齊「標籤+輸入框」的總和 */
     div.stButton > button {
         width: 100%; 
-        height: 32px !important; /* 讓按鈕高度與單行備註框接近 */
-        font-size: 16px !important; 
+        height: 72px !important; /* 精確計算：Label(25px) + TextArea(32px) + Gap(15px) */
+        font-size: 18px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
-        border-radius: 4px;
-        margin-bottom: 1px !important; /* 微調底部邊距以實現絕對平行 */
+        border-radius: 6px;
+        margin-top: 5px; /* 微調使其與標籤頂部對齊 */
     }
 
-    /* 確保所有欄位底部對齊 */
+    /* 確保欄位底部對齊 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
@@ -59,7 +58,7 @@ st.markdown("""
 
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
-# --- 固定選單內容 ---
+# --- 固定選單 ---
 LIST_PRICE = ["單次批價使用", "批價 + 預購", "使用前次預購", "使用他人預購", "純預購寄庫使用"]
 LIST_HOSP = ["花蓮慈濟", "玉里慈濟", "關山慈濟", "門諾醫院", "國軍花蓮", "部立花蓮", "部立台東", "鳳林榮民", "玉里榮民", "台東榮民", "台東聖母", "東基", "宜蘭陽大", "羅東博愛", "羅東聖母", "其他"]
 LIST_DEPT = ["骨科", "牙科", "眼科", "急診", "疼痛科", "復健科", "泌尿科", "婦產科", "神經外科", "整形外科", "胸腔外科", "一般外科", "耳鼻喉科", "大腸直腸科", "其他"]
@@ -72,10 +71,10 @@ def get_g_client():
         creds_info = st.secrets["gcp_service_account"]
         creds = Credentials.from_service_account_info(creds_info, scopes=scope)
         return gspread.authorize(creds)
-    except:
-        return None
+    except: return None
 
 def main():
+    # 這裡的 HTML 加強一下結構
     st.markdown("<h1>📋 2026 年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
     
     tab1, tab2, tab3 = st.tabs(["🖋️ 資料登錄", "📊 歷史紀錄", "🔍 預購追蹤"])
@@ -113,8 +112,7 @@ def main():
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            # --- 第三區：備註 65% + 提交鈕置右平行 ---
-            # c7=備註(6.5/10), c8=提交鈕(2/10), spacer=留白(1.5/10)
+            # --- 第三區：備註與高按鈕平行 ---
             c7, c8, spacer = st.columns([6.5, 2, 1.5]) 
             with c7:
                 f_note = st.text_area("備註")
@@ -149,7 +147,6 @@ def main():
                 f_df = main_df[main_df[search_col].astype(str).str.contains("預購", na=False)]
                 if not f_df.empty:
                     st.dataframe(f_df, use_container_width=True, hide_index=True)
-                else: st.success("無預購。")
 
 if __name__ == "__main__":
     main()
