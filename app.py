@@ -11,26 +11,31 @@ st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wid
 # --- CSS 終極界面修正 ---
 st.markdown("""
     <style>
-    /* 1. 標題修復：解決切割問題並保持緊湊 */
-    .block-container {padding-top: 0.5rem !important; max-width: 1100px;}
+    /* 1. 標題修復：給予頂部足夠空間，徹底解決切割問題 */
+    .block-container {
+        padding-top: 1.5rem !important; /* 稍微放寬頂部，防止切到標題 */
+        max-width: 1100px;
+    }
     
     h1 {
         text-align: center; 
-        font-size: 26px !important; 
-        line-height: 1.8 !important; /* 增加行高防止削頂 */
+        font-size: 28px !important; 
+        line-height: 1.5 !important; 
         margin-top: 0px !important;
-        margin-bottom: 5px !important;
+        margin-bottom: 10px !important;
+        padding-top: 5px !important; /* 增加內距，確保字體頂部完整 */
         display: block !important;
+        overflow: visible !important; /* 確保不被隱藏內容 */
     }
     
     /* 縮減分頁標籤與標題間的空隙 */
     .stTabs [data-baseweb="tab-list"] { 
-        margin-top: -15px !important; 
+        margin-top: -10px !important; 
     }
 
     label {font-size: 14px !important; font-weight: bold !important; color: #34495e !important;}
     
-    /* 備註輸入框高度微調 */
+    /* 備註輸入框高度：單行感 */
     .stTextArea textarea {
         height: 32px !important; 
         min-height: 32px !important;
@@ -39,13 +44,13 @@ st.markdown("""
     /* 2. 提交按鈕：高度對齊「標籤+輸入框」的總和 */
     div.stButton > button {
         width: 100%; 
-        height: 72px !important; /* 精確計算：Label(25px) + TextArea(32px) + Gap(15px) */
+        height: 72px !important; 
         font-size: 18px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
         border-radius: 6px;
-        margin-top: 5px; /* 微調使其與標籤頂部對齊 */
+        margin-top: 5px; 
     }
 
     /* 確保欄位底部對齊 */
@@ -74,7 +79,6 @@ def get_g_client():
     except: return None
 
 def main():
-    # 這裡的 HTML 加強一下結構
     st.markdown("<h1>📋 2026 年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
     
     tab1, tab2, tab3 = st.tabs(["🖋️ 資料登錄", "📊 歷史紀錄", "🔍 預購追蹤"])
