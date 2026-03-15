@@ -8,34 +8,31 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 終極界面修正 ---
+# --- CSS 界面終極修正 ---
 st.markdown("""
     <style>
-    /* 1. 標題修復：給予頂部足夠空間，徹底解決切割問題 */
+    /* 1. 徹底解決標題遮蔽問題 */
     .block-container {
-        padding-top: 1.5rem !important; /* 稍微放寬頂部，防止切到標題 */
+        padding-top: 1.5rem !important; 
         max-width: 1100px;
+        overflow: visible !important; /* 確保全局不裁切 */
     }
     
     h1 {
         text-align: center; 
         font-size: 28px !important; 
         line-height: 1.5 !important; 
-        margin-top: 0px !important;
-        margin-bottom: 10px !important;
-        padding-top: 5px !important; /* 增加內距，確保字體頂部完整 */
+        margin-top: 5px !important; /* 增加頂部間距，解決遮蔽 30% 的問題 */
+        margin-bottom: 15px !important;
+        padding-top: 20px !important; /* 內部補強，確保字體露臉 */
         display: block !important;
-        overflow: visible !important; /* 確保不被隱藏內容 */
+        overflow: visible !important;
     }
     
-    /* 縮減分頁標籤與標題間的空隙 */
-    .stTabs [data-baseweb="tab-list"] { 
-        margin-top: -10px !important; 
-    }
-
+    /* 標籤樣式 */
     label {font-size: 14px !important; font-weight: bold !important; color: #34495e !important;}
     
-    /* 備註輸入框高度：單行感 */
+    /* 備註輸入框高度 */
     .stTextArea textarea {
         height: 32px !important; 
         min-height: 32px !important;
@@ -50,13 +47,18 @@ st.markdown("""
         background-color: #007bff; 
         color: white; 
         border-radius: 6px;
-        margin-top: 5px; 
+        margin-top: 4px; /* 對齊備註標籤頂部 */
     }
 
     /* 確保欄位底部對齊 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
+    }
+    
+    /* 縮減分頁標籤空隙 */
+    .stTabs [data-baseweb="tab-list"] { 
+        margin-top: -5px !important; 
     }
     </style>
     """, unsafe_allow_html=True)
@@ -79,6 +81,7 @@ def get_g_client():
     except: return None
 
 def main():
+    # 放置標題
     st.markdown("<h1>📋 2026 年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
     
     tab1, tab2, tab3 = st.tabs(["🖋️ 資料登錄", "📊 歷史紀錄", "🔍 預購追蹤"])
@@ -94,6 +97,7 @@ def main():
 
     with tab1:
         with st.form("main_form", clear_on_submit=True):
+            # 第一區 & 第二區 
             c1, c2, c3 = st.columns(3)
             with c1:
                 f_date = st.date_input("使用日期", datetime.now()) 
