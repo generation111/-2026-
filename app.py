@@ -8,64 +8,48 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 界面終極修正 ---
+# --- CSS 視覺對齊修正 ---
 st.markdown("""
     <style>
-    /* 1. 徹底解決標題遮蔽問題 */
-    .block-container {
-        padding-top: 1.5rem !important; 
-        max-width: 1100px;
-        overflow: visible !important; /* 確保全局不裁切 */
-    }
-    
+    /* 1. 標題與容器優化 */
+    .block-container { padding-top: 1.5rem !important; max-width: 1100px; }
     h1 {
-        text-align: center; 
-        font-size: 28px !important; 
-        line-height: 1.5 !important; 
-        margin-top: 5px !important; /* 增加頂部間距，解決遮蔽 30% 的問題 */
-        margin-bottom: 15px !important;
-        padding-top: 20px !important; /* 內部補強，確保字體露臉 */
-        display: block !important;
-        overflow: visible !important;
-    }
-    
-    /* 標籤樣式 */
-    label {font-size: 14px !important; font-weight: bold !important; color: #34495e !important;}
-    
-    /* 備註輸入框高度 */
-    .stTextArea textarea {
-        height: 32px !important; 
-        min-height: 32px !important;
+        text-align: center; font-size: 28px !important; line-height: 1.5 !important;
+        margin-top: 10px !important; margin-bottom: 20px !important; display: block !important;
     }
 
-    /* 2. 提交按鈕：高度對齊「標籤+輸入框」的總和 */
+    /* 2. 備註區塊高度固定 */
+    .stTextArea textarea {
+        height: 38px !important; 
+        min-height: 38px !important;
+    }
+    
+    /* 標籤文字樣式 */
+    label { font-size: 14px !important; font-weight: bold !important; color: #34495e !important; }
+
+    /* 3. 提交按鈕：計算高度以對齊「標籤 + 輸入框 + 間距」 */
     div.stButton > button {
         width: 100%; 
-        height: 72px !important; 
+        height: 75px !important; /* 核心調整：此高度可完美對應左側總高 */
         font-size: 18px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
         border-radius: 6px;
-        margin-top: 4px; /* 對齊備註標籤頂部 */
+        margin-bottom: 2px !important; /* 微調底部對齊 */
     }
 
-    /* 確保欄位底部對齊 */
+    /* 強制欄位底部對齊 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
-    }
-    
-    /* 縮減分頁標籤空隙 */
-    .stTabs [data-baseweb="tab-list"] { 
-        margin-top: -5px !important; 
     }
     </style>
     """, unsafe_allow_html=True)
 
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
-# --- 固定選單 ---
+# --- 固定選單內容 ---
 LIST_PRICE = ["單次批價使用", "批價 + 預購", "使用前次預購", "使用他人預購", "純預購寄庫使用"]
 LIST_HOSP = ["花蓮慈濟", "玉里慈濟", "關山慈濟", "門諾醫院", "國軍花蓮", "部立花蓮", "部立台東", "鳳林榮民", "玉里榮民", "台東榮民", "台東聖母", "東基", "宜蘭陽大", "羅東博愛", "羅東聖母", "其他"]
 LIST_DEPT = ["骨科", "牙科", "眼科", "急診", "疼痛科", "復健科", "泌尿科", "婦產科", "神經外科", "整形外科", "胸腔外科", "一般外科", "耳鼻喉科", "大腸直腸科", "其他"]
@@ -81,9 +65,7 @@ def get_g_client():
     except: return None
 
 def main():
-    # 放置標題
     st.markdown("<h1>📋 2026 年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
-    
     tab1, tab2, tab3 = st.tabs(["🖋️ 資料登錄", "📊 歷史紀錄", "🔍 預購追蹤"])
 
     client = get_g_client()
@@ -97,7 +79,7 @@ def main():
 
     with tab1:
         with st.form("main_form", clear_on_submit=True):
-            # 第一區 & 第二區 
+            # 前兩列保持原樣
             c1, c2, c3 = st.columns(3)
             with c1:
                 f_date = st.date_input("使用日期", datetime.now()) 
@@ -120,11 +102,12 @@ def main():
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            # --- 第三區：備註與高按鈕平行 ---
+            # --- 第三區：備註與提交數據按鈕（高度絕對對齊） ---
             c7, c8, spacer = st.columns([6.5, 2, 1.5]) 
             with c7:
                 f_note = st.text_area("備註")
             with c8:
+                # 按鈕會透過 CSS 強制撐開至對齊左側備註總高度
                 submit_btn = st.form_submit_button("🚀 提交數據")
 
             if submit_btn:
@@ -145,7 +128,7 @@ def main():
     with tab2:
         if not main_df.empty:
             st.dataframe(main_df, use_container_width=True, hide_index=True)
-        else: st.info("無紀錄。")
+        else: st.info("目前無歷史紀錄。")
 
     with tab3:
         if not main_df.empty:
