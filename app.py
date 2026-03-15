@@ -20,7 +20,7 @@ st.markdown("""
 # 試算表 ID
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
-# --- 寫死選單資料，確保不再出現「等待選單載入」 ---
+# --- 強制內建選單資料，徹底解決連動失效問題 ---
 LIST_PRICE = ["單次批價使用", "批價 + 預購", "使用前次預購", "使用他人預購", "純預購寄庫使用"]
 LIST_HOSP = ["花蓮慈濟", "玉里慈濟", "關山慈濟", "門諾醫院", "國軍花蓮", "部立花蓮", "部立台東", "鳳林榮民", "玉里榮民", "台東榮民", "台東聖母", "東基", "宜蘭陽大", "羅東博愛", "羅東聖母", "其他"]
 LIST_DEPT = ["骨科", "牙科", "眼科", "急診", "疼痛科", "復健科", "泌尿科", "婦產科", "神經外科", "整形外科", "胸腔外科", "一般外科", "耳鼻喉科", "大腸直腸科", "其他"]
@@ -40,30 +40,31 @@ def main():
     st.markdown("<h1>📋 『2026』年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
     
     with st.form("main_form", clear_on_submit=True):
+        # 嚴格對準截圖 image_519458.png 的 A 到 P 欄位順序
         c1, c2, c3 = st.columns(3)
         
         with c1:
-            f_date = st.date_input("使用日期 (A欄)", datetime.now()) 
-            f_price = st.selectbox("批價內容 (B欄)", LIST_PRICE)
-            f_hosp = st.selectbox("使用醫院 (C欄)", LIST_HOSP)
-            f_dept = st.selectbox("使用科別 (D欄)", LIST_DEPT)
-            f_doc = st.text_input("醫師姓名 (E欄)")
+            f_date = st.date_input("使用日期", datetime.now()) # A
+            f_price = st.selectbox("批價內容", LIST_PRICE) # B
+            f_hosp = st.selectbox("使用醫院", LIST_HOSP) # C
+            f_dept = st.selectbox("使用科別", LIST_DEPT) # D
+            f_doc = st.text_input("醫師姓名") # E
             
         with c2:
-            f_prod = st.selectbox("產品項目 (F欄)", LIST_PROD)
-            f_spec = st.text_input("規格 (G欄)")
-            f_qty = st.text_input("數量 (H欄)", value="1")
-            f_content = st.text_input("使用產品內容-含預購 (I欄)")
-            f_pat = st.text_input("病人名 (J欄)")
+            f_prod = st.selectbox("產品項目", LIST_PROD) # F
+            f_spec = st.text_input("規格") # G
+            f_qty = st.text_input("數量", value="1") # H
+            f_content = st.text_input("使用產品內容(含預購)") # I
+            f_pat = st.text_input("病人名") # J
             
         with c3:
-            f_pid = st.text_input("病例號/ID (K欄)")
-            f_op = st.text_input("手術名稱/使用部位 (L欄)")
-            f_loc = st.text_input("使用地點 (M欄)")
-            f_blood = st.selectbox("抽血人員 (N欄)", LIST_BLOOD)
-            f_staff = st.text_input("跟刀(操作)人員 (O欄)")
+            f_pid = st.text_input("病例號/ID") # K
+            f_op = st.text_input("手術名稱/使用部位") # L
+            f_loc = st.text_input("使用地點") # M
+            f_blood = st.selectbox("抽血人員", LIST_BLOOD) # N
+            f_staff = st.text_input("跟刀(操作)人員") # O
 
-        f_note = st.text_area("備註 (P欄)")
+        f_note = st.text_area("備註") # P
 
         if st.form_submit_button("🚀 提交數據"):
             client = get_g_client()
@@ -75,7 +76,7 @@ def main():
                         f_prod, f_spec, f_qty, f_content, f_pat, f_pid, f_op,
                         f_loc, f_blood, f_staff, f_note
                     ])
-                    st.success("✅ 資料錄入成功！")
+                    st.success("✅ 資料錄入成功，已同步至回應試算表！")
                     time.sleep(1)
                     st.rerun()
                 except Exception as e:
