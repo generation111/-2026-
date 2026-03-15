@@ -7,6 +7,7 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
+# CSS 優化：調整按鈕垂直位置，使其與備註欄對齊
 st.markdown("""
     <style>
     .block-container {padding-top: 1rem; max-width: 1100px;}
@@ -14,6 +15,9 @@ st.markdown("""
     label {font-size: 18px !important; font-weight: bold !important; color: #1E1E1E !important;}
     .stSelectbox div[data-baseweb="select"] {font-size: 18px !important;}
     input {font-size: 18px !important;}
+    /* 讓提交按鈕稍微往下靠，與備註輸入框對齊 */
+    div.stButton {margin-top: 30px;}
+    .stButton button {width: 100%; height: 60px; font-size: 20px !important; background-color: #007bff; color: white;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -67,12 +71,14 @@ def main():
         with c6:
             f_staff = st.text_input("跟刀(操作)人員")
 
-        # 第三區：備註 (縮小寬度為 25%，高度設定為 2 行)
-        note_col, spacer = st.columns([1, 3]) # 1:3 比例，讓備註只佔 25% 寬度
+        # 第三區：備註與提交按鈕 (將按鈕移至右方空白處)
+        note_col, btn_col, spacer = st.columns([1, 1, 2]) # 25% 備註, 25% 按鈕, 50% 留白
         with note_col:
-            f_note = st.text_area("備註", height=60) # height=60 約為原本高度的 25%
+            f_note = st.text_area("備註", height=60)
+        with btn_col:
+            submit_btn = st.form_submit_button("🚀 提交數據")
 
-        if st.form_submit_button("🚀 提交數據"):
+        if submit_btn:
             client = get_g_client()
             if client:
                 try:
