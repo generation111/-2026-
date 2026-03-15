@@ -20,7 +20,7 @@ st.markdown("""
 # 試算表 ID
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
-# --- 根據佰哥提供資料，直接內建選單，不再讀取 Settings 分頁 ---
+# --- 寫死選單資料，確保不再出現「等待選單載入」 ---
 LIST_PRICE = ["單次批價使用", "批價 + 預購", "使用前次預購", "使用他人預購", "純預購寄庫使用"]
 LIST_HOSP = ["花蓮慈濟", "玉里慈濟", "關山慈濟", "門諾醫院", "國軍花蓮", "部立花蓮", "部立台東", "鳳林榮民", "玉里榮民", "台東榮民", "台東聖母", "東基", "宜蘭陽大", "羅東博愛", "羅東聖母", "其他"]
 LIST_DEPT = ["骨科", "牙科", "眼科", "急診", "疼痛科", "復健科", "泌尿科", "婦產科", "神經外科", "整形外科", "胸腔外科", "一般外科", "耳鼻喉科", "大腸直腸科", "其他"]
@@ -40,7 +40,6 @@ def main():
     st.markdown("<h1>📋 『2026』年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
     
     with st.form("main_form", clear_on_submit=True):
-        # 嚴格按照截圖 image_519458.png 的 A 到 P 欄位順序排列
         c1, c2, c3 = st.columns(3)
         
         with c1:
@@ -71,19 +70,18 @@ def main():
             if client:
                 try:
                     ws = client.open_by_key(SPREADSHEET_ID).worksheet("回應試算表")
-                    # 精準排列數據：日期, 批價, 醫院, 科別, 醫師, 產品, 規格, 數量, 內容, 病人, ID, 部位, 地點, 抽血, 跟刀, 備註
                     ws.append_row([
                         f_date.strftime("%Y/%m/%d"), f_price, f_hosp, f_dept, f_doc,
                         f_prod, f_spec, f_qty, f_content, f_pat, f_pid, f_op,
                         f_loc, f_blood, f_staff, f_note
                     ])
-                    st.success("✅ 資料錄入成功，已同步至雲端！")
+                    st.success("✅ 資料錄入成功！")
                     time.sleep(1)
                     st.rerun()
                 except Exception as e:
-                    st.error(f"寫入失敗，請確認回應試算表分頁存在：{e}")
+                    st.error(f"寫入失敗：{e}")
             else:
-                st.error("❌ 雲端連線金鑰失效，請檢查 Streamlit Secrets 設定。")
+                st.error("❌ 雲端連線失敗，請檢查 Secrets 設定。")
 
 if __name__ == "__main__":
     main()
