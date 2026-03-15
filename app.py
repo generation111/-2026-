@@ -8,15 +8,43 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 界面優化 ---
+# --- CSS 界面修正：處理間距、備註與按鈕 ---
 st.markdown("""
     <style>
-    .block-container {padding-top: 1rem; max-width: 1100px;}
-    h1 {text-align: center; font-size: 28px !important; line-height: 1.6 !important; margin-bottom: 25px !important; color: #1E1E1E;}
-    label {font-size: 16px !important; font-weight: bold !important; color: #34495e !important;}
-    div.stButton {margin-top: 15px;}
-    .stButton button {width: 100%; height: 50px; font-size: 18px !important; font-weight: bold !important; background-color: #007bff; color: white; border-radius: 8px;}
-    [data-testid="column"] { display: flex; align-items: flex-end; }
+    /* 縮減頂部整體邊距 */
+    .block-container {padding-top: 0.5rem !important; max-width: 1100px;}
+    
+    /* 1. 標題與作業區間空白縮減 */
+    h1 {
+        text-align: center; 
+        font-size: 26px !important; 
+        margin-top: 0px !important; 
+        margin-bottom: 5px !important; /* 極小化下方空白 */
+        padding-bottom: 0px !important;
+    }
+    
+    /* 移除分頁標籤上方的空白 */
+    .stTabs [data-baseweb="tab-list"] { margin-top: -10px !important; }
+
+    label {font-size: 15px !important; font-weight: bold !important; color: #34495e !important;}
+    
+    /* 3. 提交按鈕樣式：確保高度與備註框接近 */
+    div.stButton > button {
+        width: 100%; 
+        height: 42px !important; /* 匹配縮小後的備註框高度 */
+        font-size: 18px !important; 
+        font-weight: bold !important; 
+        background-color: #007bff; 
+        color: white; 
+        border-radius: 6px;
+        margin-bottom: 5px;
+    }
+
+    /* 確保欄位底部對齊 */
+    [data-testid="column"] {
+        display: flex;
+        align-items: flex-end;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -43,21 +71,19 @@ def main():
     
     tab1, tab2, tab3 = st.tabs(["🖋️ 資料登錄", "📊 歷史紀錄", "🔍 預購追蹤"])
 
-    # --- 讀取雲端資料 (供 Tab 2 & 3 使用) ---
+    # --- 預載資料 ---
     client = get_g_client()
     main_df = pd.DataFrame()
     if client:
         try:
             ws = client.open_by_key(SPREADSHEET_ID).worksheet("回應試算表")
             data = ws.get_all_records()
-            if data:
-                main_df = pd.DataFrame(data)
-        except:
-            pass
+            if data: main_df = pd.DataFrame(data)
+        except: pass
 
-    # --- Tab 1: 資料登錄 ---
     with tab1:
         with st.form("main_form", clear_on_submit=True):
+            # 第一區 & 第二區 保持原有配置
             c1, c2, c3 = st.columns(3)
             with c1:
                 f_date = st.date_input("使用日期", datetime.now()) 
@@ -80,9 +106,15 @@ def main():
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            c7, c8, spacer = st.columns([1.5, 1, 1.5]) 
-            with c7: f_note = st.text_area("備註", height=40)
-            with c8: submit_btn = st.form_submit_button("🚀 提交數據")
+            # --- 第三區：備註與提交鈕（重點修正） ---
+            # c7=備註(55%), c8=提交鈕(20%), spacer=留白(25%)
+            c7, c8, spacer = st.columns([5.5, 2, 2.5]) 
+            with c7:
+                # 2. 高度減 30% (從 40 降至 30)，寬度透過 column 增加
+                f_note = st.text_area("備註", height=30)
+            with c8:
+                # 3. 按鈕置右且平行備註
+                submit_btn = st.form_submit_button("🚀 提交數據")
 
             if submit_btn:
                 if client:
@@ -93,40 +125,28 @@ def main():
                             f_prod, f_spec, f_qty, f_content, f_pat, f_pid, f_op,
                             f_loc, f_blood, f_staff, f_note
                         ])
-                        st.success("✅ 資料同步成功！")
-                        time.sleep(1)
+                        st.success("✅ 成功！")
+                        time.sleep(0.5)
                         st.rerun()
                     except Exception as e:
-                        st.error(f"寫入失敗：{e}")
+                        st.error(f"錯誤：{e}")
 
-    # --- Tab 2: 歷史紀錄 (您的需求 1) ---
     with tab2:
-        if st.button("🔄 刷新頁面", key="refresh_tab2"):
-            st.rerun()
         if not main_df.empty:
             st.dataframe(main_df, use_container_width=True, hide_index=True)
         else:
             st.info("目前雲端暫無歷史紀錄。")
 
-    # --- Tab 3: 預購追蹤 (您的需求 2 & 3) ---
     with tab3:
         if not main_df.empty:
             cols = main_df.columns.tolist()
-            # 模糊搜尋包含「預購」字眼的欄位名稱
             search_col = next((c for c in cols if "預購" in str(c)), None)
-            
             if search_col:
-                # 篩選該欄位內容中包含「預購」字樣的行
                 f_df = main_df[main_df[search_col].astype(str).str.contains("預購", na=False)]
                 if not f_df.empty:
-                    st.write(f"🔍 已自動篩選欄位：**{search_col}**")
                     st.dataframe(f_df, use_container_width=True, hide_index=True)
-                else:
-                    st.success("目前暫無待追蹤的預購項目。")
-            else:
-                st.warning("找不到包含『預購』字眼的欄位，請檢查試算表標題。")
-        else:
-            st.info("目前暫無資料可供篩選。")
+                else: st.success("暫無預購項目。")
+        else: st.info("暫無資料。")
 
 if __name__ == "__main__":
     main()
