@@ -8,38 +8,41 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 視覺對齊修正 ---
+# --- CSS 視覺終極補強 ---
 st.markdown("""
     <style>
-    /* 1. 標題與容器優化 */
+    /* 標題與容器維持緊湊 */
     .block-container { padding-top: 1.5rem !important; max-width: 1100px; }
-    h1 {
-        text-align: center; font-size: 28px !important; line-height: 1.5 !important;
-        margin-top: 10px !important; margin-bottom: 20px !important; display: block !important;
-    }
+    h1 { text-align: center; font-size: 28px !important; margin-bottom: 20px !important; }
 
-    /* 2. 備註區塊高度固定 */
+    /* 備註輸入框固定高度 */
     .stTextArea textarea {
         height: 38px !important; 
         min-height: 38px !important;
     }
     
-    /* 標籤文字樣式 */
     label { font-size: 14px !important; font-weight: bold !important; color: #34495e !important; }
 
-    /* 3. 提交按鈕：計算高度以對齊「標籤 + 輸入框 + 間距」 */
+    /* 核心修正：按鈕塊狀對齊 */
     div.stButton > button {
         width: 100%; 
-        height: 75px !important; /* 核心調整：此高度可完美對應左側總高 */
+        height: 78px !important; /* 增加高度以涵蓋左側標籤+輸入框 */
         font-size: 18px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
         border-radius: 6px;
-        margin-bottom: 2px !important; /* 微調底部對齊 */
+        /* 位移修正：讓按鈕中心點上移，對齊左側整體視覺中心 */
+        margin-bottom: 2px !important; 
     }
 
-    /* 強制欄位底部對齊 */
+    /* 強制讓按鈕容器不產生額外間距 */
+    [data-testid="stFormSubmitButton"] {
+        display: flex;
+        align-items: flex-end;
+    }
+
+    /* 確保欄位底部對齊 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
@@ -49,7 +52,7 @@ st.markdown("""
 
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
-# --- 固定選單內容 ---
+# --- 固定選單 ---
 LIST_PRICE = ["單次批價使用", "批價 + 預購", "使用前次預購", "使用他人預購", "純預購寄庫使用"]
 LIST_HOSP = ["花蓮慈濟", "玉里慈濟", "關山慈濟", "門諾醫院", "國軍花蓮", "部立花蓮", "部立台東", "鳳林榮民", "玉里榮民", "台東榮民", "台東聖母", "東基", "宜蘭陽大", "羅東博愛", "羅東聖母", "其他"]
 LIST_DEPT = ["骨科", "牙科", "眼科", "急診", "疼痛科", "復健科", "泌尿科", "婦產科", "神經外科", "整形外科", "胸腔外科", "一般外科", "耳鼻喉科", "大腸直腸科", "其他"]
@@ -79,35 +82,41 @@ def main():
 
     with tab1:
         with st.form("main_form", clear_on_submit=True):
-            # 前兩列保持原樣
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                f_date = st.date_input("使用日期", datetime.now()) 
-                f_price = st.selectbox("批價內容", LIST_PRICE, index=1)
-                f_hosp = st.selectbox("使用醫院", LIST_HOSP, index=0)
-                f_dept = st.selectbox("使用科別", LIST_DEPT, index=0)
-            with c2:
-                f_doc = st.text_input("醫師姓名")
-                f_prod = st.selectbox("產品項目", LIST_PROD, index=0)
-                f_spec = st.text_input("規格")
-                f_qty = st.text_input("數量", value="1")
-            with c3:
-                f_content = st.text_input("使用產品內容-含預購")
-                f_pat = st.text_input("病人名")
-                f_pid = st.text_input("病例號/ID")
-                f_op = st.text_input("手術名稱/使用部位")
+            # 前兩列配置
+            for i in range(2):
+                cols = st.columns(3)
+                if i == 0:
+                    with cols[0]:
+                        f_date = st.date_input("使用日期", datetime.now()) 
+                        f_price = st.selectbox("批價內容", LIST_PRICE, index=1)
+                    with cols[1]:
+                        f_doc = st.text_input("醫師姓名")
+                        f_prod = st.selectbox("產品項目", LIST_PROD, index=0)
+                    with cols[2]:
+                        f_content = st.text_input("使用產品內容-含預購")
+                        f_pat = st.text_input("病人名")
+                else:
+                    with cols[0]:
+                        f_hosp = st.selectbox("使用醫院", LIST_HOSP, index=0)
+                        f_dept = st.selectbox("使用科別", LIST_DEPT, index=0)
+                    with cols[1]:
+                        f_spec = st.text_input("規格")
+                        f_qty = st.text_input("數量", value="1")
+                    with cols[2]:
+                        f_pid = st.text_input("病例號/ID")
+                        f_op = st.text_input("手術名稱/使用部位")
 
             c4, c5, c6 = st.columns(3)
             with c4: f_loc = st.text_input("使用地點")
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            # --- 第三區：備註與提交數據按鈕（高度絕對對齊） ---
-            c7, c8, spacer = st.columns([6.5, 2, 1.5]) 
+            # --- 第三區：對齊重點修正 ---
+            # 調整比例，讓按鈕看起來更像一個正方形塊狀
+            c7, c8, spacer = st.columns([6.5, 2.5, 1.0]) 
             with c7:
                 f_note = st.text_area("備註")
             with c8:
-                # 按鈕會透過 CSS 強制撐開至對齊左側備註總高度
                 submit_btn = st.form_submit_button("🚀 提交數據")
 
             if submit_btn:
@@ -126,18 +135,14 @@ def main():
                         st.error(f"錯誤：{e}")
 
     with tab2:
-        if not main_df.empty:
-            st.dataframe(main_df, use_container_width=True, hide_index=True)
-        else: st.info("目前無歷史紀錄。")
-
+        if not main_df.empty: st.dataframe(main_df, use_container_width=True, hide_index=True)
     with tab3:
         if not main_df.empty:
             cols = main_df.columns.tolist()
             search_col = next((c for c in cols if "預購" in str(c)), None)
             if search_col:
                 f_df = main_df[main_df[search_col].astype(str).str.contains("預購", na=False)]
-                if not f_df.empty:
-                    st.dataframe(f_df, use_container_width=True, hide_index=True)
+                if not f_df.empty: st.dataframe(f_df, use_container_width=True, hide_index=True)
 
 if __name__ == "__main__":
     main()
