@@ -8,14 +8,14 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 視覺對齊修正：針對備註區塊垂直位移 ---
+# --- CSS 視覺對齊修正：終極像素微調 ---
 st.markdown("""
     <style>
-    /* 1. 基礎容器優化 */
+    /* 基礎容器優化 */
     .block-container { padding-top: 1.5rem !important; max-width: 1100px; }
     h1 { text-align: center; font-size: 28px !important; margin-bottom: 20px !important; }
 
-    /* 2. 備註輸入框設定 */
+    /* 備註輸入框設定 */
     .stTextArea textarea {
         height: 38px !important; 
         min-height: 38px !important;
@@ -23,23 +23,24 @@ st.markdown("""
     
     label { font-size: 14px !important; font-weight: bold !important; color: #34495e !important; }
 
-    /* 3. 按鈕垂直對齊核心：向上位移並鎖定高度 */
+    /* 核心對齊修正：將按鈕容器整體上提，對齊 Label 頂端 */
     div.stButton {
-        transform: translateY(-28px) !important; /* 加強位移量，對齊 Label 頂端 */
+        transform: translateY(-35px) !important; /* 從 -28px 增加到 -35px，對齊備註文字頂部 */
     }
 
     div.stButton > button {
         width: 100%; 
-        height: 82px !important; /* 精確補償高度：標籤(24px) + 間距(20px) + 輸入框(38px) */
+        height: 82px !important; /* 維持完整塊狀高度 */
         font-size: 18px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
         border-radius: 6px;
         border: none !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    /* 確保欄位底部對齊 */
+    /* 確保欄位底部對齊邏輯 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
@@ -49,7 +50,7 @@ st.markdown("""
 
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
-# --- 固定選單 ---
+# --- 選單內容 ---
 LIST_PRICE = ["單次批價使用", "批價 + 預購", "使用前次預購", "使用他人預購", "純預購寄庫使用"]
 LIST_HOSP = ["花蓮慈濟", "玉里慈濟", "關山慈濟", "門諾醫院", "國軍花蓮", "部立花蓮", "部立台東", "鳳林榮民", "玉里榮民", "台東榮民", "台東聖母", "東基", "宜蘭陽大", "羅東博愛", "羅東聖母", "其他"]
 LIST_DEPT = ["骨科", "牙科", "眼科", "急診", "疼痛科", "復健科", "泌尿科", "婦產科", "神經外科", "整形外科", "胸腔外科", "一般外科", "耳鼻喉科", "大腸直腸科", "其他"]
@@ -62,7 +63,7 @@ def get_g_client():
         creds_info = st.secrets["gcp_service_account"]
         creds = Credentials.from_service_account_info(creds_info, scopes=scope)
         return gspread.authorize(creds)
-    except: return None
+    except Exception: return None
 
 def main():
     st.markdown("<h1>📋 2026 年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
@@ -75,11 +76,11 @@ def main():
             ws = client.open_by_key(SPREADSHEET_ID).worksheet("回應試算表")
             data = ws.get_all_records()
             if data: main_df = pd.DataFrame(data)
-        except: pass
+        except Exception: pass
 
     with tab1:
         with st.form("main_form", clear_on_submit=True):
-            # 內容輸入區
+            # 第一列 & 第二列
             c1, c2, c3 = st.columns(3)
             with c1:
                 f_date = st.date_input("使用日期", datetime.now()) 
@@ -102,7 +103,7 @@ def main():
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            # --- 第三區：備註與按鈕對齊（終極位移修正） ---
+            # --- 第三區：對齊位移修正 ---
             c7, c8, spacer = st.columns([6.5, 2.5, 1.0]) 
             with c7:
                 f_note = st.text_area("備註")
