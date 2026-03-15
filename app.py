@@ -5,9 +5,17 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import time
 
-st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
+st.set_page_config(page_title="2026 慈榛驊管理系統", layout="wide")
 
-st.markdown("""<style>.block-container {padding-top: 1rem;} h1 {text-align: center; font-size: 24px !important;}</style>""", unsafe_allow_html=True)
+# CSS 強制字體大小，不再縮小，確保平板好讀
+st.markdown("""
+    <style>
+    .block-container {padding-top: 1rem;}
+    h1 {text-align: center; font-size: 28px !important; color: #1E1E1E;}
+    label {font-size: 18px !important; font-weight: bold !important; color: #34495e !important;}
+    .stSelectbox div[data-baseweb="select"] {font-size: 18px !important;}
+    </style>
+    """, unsafe_allow_html=True)
 
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
@@ -18,51 +26,51 @@ def get_g_client():
         creds = Credentials.from_service_account_info(creds_info, scopes=scope)
         return gspread.authorize(creds)
     except Exception as e:
-        st.error(f"❌ Secrets 金鑰連線失敗，請檢查後台設定。")
+        st.error(f"❌ 金鑰連線失敗，請檢查 Secrets 設定。")
         return None
 
-def load_settings():
+def load_hard_coded_menus():
     client = get_g_client()
     if not client: return {}
     try:
         sh = client.open_by_key(SPREADSHEET_ID)
         ws = sh.worksheet("Settings")
-        data = ws.get_all_values()
-        if len(data) < 2: return {}
+        # 直接抓取整張表，不靠標題對齊
+        all_data = ws.get_all_values()
+        if len(all_data) < 2: return {}
         
-        # 轉成 DataFrame 並清除所有欄位名稱的空格
-        df = pd.DataFrame(data[1:], columns=data[0])
-        df.columns = df.columns.str.strip()
+        df = pd.DataFrame(all_data)
         
-        # 將每一欄轉成清單，過濾空值
-        res = {}
-        for col in df.columns:
-            res[col] = [v.strip() for v in df[col].unique() if v and v.strip()]
-        return res
+        # 依照 Settings 分頁的物理位置強行抓取 (0 是 A 欄, 1 是 B 欄...)
+        # 假設：A=批價, B=使用醫院, C=使用科別, D=產品項目, E=抽血人員
+        menus = {
+            "price": [v for v in df[0].unique() if v and v != df[0][0]],
+            "hosp":  [v for v in df[1].unique() if v and v != df[1][0]],
+            "dept":  [v for v in df[2].unique() if v and v != df[2][0]],
+            "prod":  [v for v in df[3].unique() if v and v != df[3][0]],
+            "blood": [v for v in df[4].unique() if v and v != df[4][0]]
+        }
+        return menus
     except Exception as e:
-        st.error(f"❌ 讀取 Settings 失敗，請確認分頁名稱是否完全正確：{e}")
+        st.error(f"❌ 讀取 Settings 物理欄位失敗: {e}")
         return {}
 
 def main():
-    st.markdown("<h1>📋 『2026』年度跟刀記錄管理系統</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>📋 慈榛驊業務管理系統</h1>", unsafe_allow_html=True)
     
-    # 載入選單字典
-    menu_data = load_settings()
+    # 載入選單
+    m = load_hard_coded_menus()
 
     with st.form("main_form", clear_on_submit=True):
-        def get_opts(name):
-            return menu_data.get(name, ["(載入中或欄位不符)"])
-
         c1, c2, c3 = st.columns(3)
         with c1:
-            # 依據您提醒的順序：使用日期是第一欄
-            f_date = st.date_input("使用日期", datetime.now())
-            f_price = st.selectbox("批價內容", get_opts("批價內容"))
-            f_hosp = st.selectbox("使用醫院", get_opts("使用醫院"))
-            f_dept = st.selectbox("使用科別", get_opts("使用科別"))
+            f_date = st.date_input("使用日期 (第一欄)", datetime.now())
+            f_price = st.selectbox("批價內容", m.get("price", ["載入中..."]))
+            f_hosp = st.selectbox("使用醫院", m.get("hosp", ["載入中..."]))
+            f_dept = st.selectbox("使用科別", m.get("dept", ["載入中..."]))
         with c2:
             f_doc = st.text_input("醫師姓名")
-            f_prod = st.selectbox("產品項目", get_opts("產品項目"))
+            f_prod = st.selectbox("產品項目", m.get("prod", ["載入中..."]))
             f_spec = st.text_input("規格")
             f_qty = st.text_input("數量", value="1")
         with c3:
@@ -72,22 +80,22 @@ def main():
             f_op = st.text_input("手術名稱/使用部位")
 
         f_loc = st.text_input("使用地點")
-        f_blood = st.selectbox("抽血人員", get_opts("抽血人員"))
+        f_blood = st.selectbox("抽血人員", m.get("blood", ["載入中..."]))
         f_staff = st.text_input("跟刀人員")
         f_note = st.text_area("備註")
 
-        if st.form_submit_button("🚀 確認提交並存檔"):
+        if st.form_submit_button("🚀 確認提交並寫入試算表"):
             client = get_g_client()
             if client:
                 try:
                     ws = client.open_by_key(SPREADSHEET_ID).worksheet("回應試算表")
-                    # 寫入順序：日期, 批價, 醫院, 科別, 醫師, 產品, 規格, 數量, 內容, 病人, ID, 部位, 地點, 抽血, 跟刀, 備註
+                    # 按照您要求的第一欄日期順序寫入
                     ws.append_row([
                         f_date.strftime("%Y/%m/%d"), f_price, f_hosp, f_dept, f_doc,
                         f_prod, f_spec, f_qty, f_content, f_pat, f_pid, f_op,
                         f_loc, f_blood, f_staff, f_note
                     ])
-                    st.success("🎉 資料已成功錄入！")
+                    st.success("🎉 資料同步成功！")
                     time.sleep(1)
                     st.rerun()
                 except Exception as e:
