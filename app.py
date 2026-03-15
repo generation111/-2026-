@@ -58,7 +58,7 @@ def main():
             f_pid = st.text_input("病例號/ID")
             f_op = st.text_input("手術名稱/使用部位")
 
-        # 第二區：操作資訊 (依要求改為三欄排列)
+        # 第二區：操作資訊 (三欄)
         c4, c5, c6 = st.columns(3)
         with c4:
             f_loc = st.text_input("使用地點")
@@ -67,8 +67,10 @@ def main():
         with c6:
             f_staff = st.text_input("跟刀(操作)人員")
 
-        # 備註區
-        f_note = st.text_area("備註")
+        # 第三區：備註 (縮小寬度為 25%，高度設定為 2 行)
+        note_col, spacer = st.columns([1, 3]) # 1:3 比例，讓備註只佔 25% 寬度
+        with note_col:
+            f_note = st.text_area("備註", height=60) # height=60 約為原本高度的 25%
 
         if st.form_submit_button("🚀 提交數據"):
             client = get_g_client()
@@ -80,7 +82,7 @@ def main():
                         f_prod, f_spec, f_qty, f_content, f_pat, f_pid, f_op,
                         f_loc, f_blood, f_staff, f_note
                     ])
-                    st.success("✅ 資料錄入成功，已同步至回應試算表！")
+                    st.success("✅ 資料錄入成功！")
                     time.sleep(1)
                     st.rerun()
                 except Exception as e:
