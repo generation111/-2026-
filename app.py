@@ -8,39 +8,48 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 界面修正：處理間距、備註與按鈕 ---
+# --- CSS 界面修正：處理間距、備註高度與平行對齊 ---
 st.markdown("""
     <style>
     /* 縮減頂部整體邊距 */
-    .block-container {padding-top: 0.5rem !important; max-width: 1100px;}
+    .block-container {padding-top: 0.2rem !important; max-width: 1100px;}
     
-    /* 1. 標題與作業區間空白縮減 */
+    /* 1. 標題與作業區間空白極小化 */
     h1 {
         text-align: center; 
-        font-size: 26px !important; 
+        font-size: 24px !important; 
         margin-top: 0px !important; 
-        margin-bottom: 5px !important; /* 極小化下方空白 */
+        margin-bottom: 0px !important; 
         padding-bottom: 0px !important;
     }
     
-    /* 移除分頁標籤上方的空白 */
-    .stTabs [data-baseweb="tab-list"] { margin-top: -10px !important; }
+    /* 強力縮減分頁標籤上方的空白 */
+    .stTabs [data-baseweb="tab-list"] { 
+        margin-top: -25px !important; 
+    }
 
-    label {font-size: 15px !important; font-weight: bold !important; color: #34495e !important;}
+    label {font-size: 14px !important; font-weight: bold !important; color: #34495e !important;}
     
-    /* 3. 提交按鈕樣式：確保高度與備註框接近 */
+    /* 2. 備註輸入框高度微調 (單/雙行感) */
+    .stTextArea textarea {
+        height: 28px !important; 
+        min-height: 28px !important;
+        padding: 5px !important;
+    }
+
+    /* 3. 提交按鈕樣式與平行對齊 */
     div.stButton > button {
         width: 100%; 
-        height: 42px !important; /* 匹配縮小後的備註框高度 */
-        font-size: 18px !important; 
+        height: 32px !important; /* 讓按鈕高度與單行備註框接近 */
+        font-size: 16px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
-        border-radius: 6px;
-        margin-bottom: 5px;
+        border-radius: 4px;
+        margin-bottom: 1px !important; /* 微調底部邊距以實現絕對平行 */
     }
 
-    /* 確保欄位底部對齊 */
+    /* 確保所有欄位底部對齊 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
@@ -71,7 +80,6 @@ def main():
     
     tab1, tab2, tab3 = st.tabs(["🖋️ 資料登錄", "📊 歷史紀錄", "🔍 預購追蹤"])
 
-    # --- 預載資料 ---
     client = get_g_client()
     main_df = pd.DataFrame()
     if client:
@@ -83,7 +91,6 @@ def main():
 
     with tab1:
         with st.form("main_form", clear_on_submit=True):
-            # 第一區 & 第二區 保持原有配置
             c1, c2, c3 = st.columns(3)
             with c1:
                 f_date = st.date_input("使用日期", datetime.now()) 
@@ -106,14 +113,12 @@ def main():
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            # --- 第三區：備註與提交鈕（重點修正） ---
-            # c7=備註(55%), c8=提交鈕(20%), spacer=留白(25%)
-            c7, c8, spacer = st.columns([5.5, 2, 2.5]) 
+            # --- 第三區：備註 65% + 提交鈕置右平行 ---
+            # c7=備註(6.5/10), c8=提交鈕(2/10), spacer=留白(1.5/10)
+            c7, c8, spacer = st.columns([6.5, 2, 1.5]) 
             with c7:
-                # 2. 高度減 30% (從 40 降至 30)，寬度透過 column 增加
-                f_note = st.text_area("備註", height=30)
+                f_note = st.text_area("備註")
             with c8:
-                # 3. 按鈕置右且平行備註
                 submit_btn = st.form_submit_button("🚀 提交數據")
 
             if submit_btn:
@@ -125,7 +130,7 @@ def main():
                             f_prod, f_spec, f_qty, f_content, f_pat, f_pid, f_op,
                             f_loc, f_blood, f_staff, f_note
                         ])
-                        st.success("✅ 成功！")
+                        st.success("✅ 提交成功！")
                         time.sleep(0.5)
                         st.rerun()
                     except Exception as e:
@@ -134,8 +139,7 @@ def main():
     with tab2:
         if not main_df.empty:
             st.dataframe(main_df, use_container_width=True, hide_index=True)
-        else:
-            st.info("目前雲端暫無歷史紀錄。")
+        else: st.info("無紀錄。")
 
     with tab3:
         if not main_df.empty:
@@ -145,8 +149,7 @@ def main():
                 f_df = main_df[main_df[search_col].astype(str).str.contains("預購", na=False)]
                 if not f_df.empty:
                     st.dataframe(f_df, use_container_width=True, hide_index=True)
-                else: st.success("暫無預購項目。")
-        else: st.info("暫無資料。")
+                else: st.success("無預購。")
 
 if __name__ == "__main__":
     main()
