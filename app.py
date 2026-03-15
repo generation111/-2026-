@@ -59,15 +59,21 @@ st.markdown("""
 SPREADSHEET_ID = "1w2BDsPHHxgaz6PJhoPLXdh0UQJplA6rr42wLoLQIM9s"
 
 def get_g_client():
-    # 這裡修正為從雲端 Secrets 讀取，不再讀取 creds.json
-    try:
-        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    
+    # 優先嘗試讀取雲端 Secrets (GitHub/Streamlit 佈署用)
+    if "gcp_service_account" in st.secrets:
         creds_info = st.secrets["gcp_service_account"]
         creds = Credentials.from_service_account_info(creds_info, scopes=scope)
-        return gspread.authorize(creds)
-    except Exception as e:
-        st.error(f"金鑰連動失敗: {e}")
-        return None
+    # 如果 Secrets 找不到，再嘗試讀取本地檔案 (VS Code 開發用)
+    else:
+        try:
+            creds = Credentials.from_service_account_file("creds.json", scopes=scope)
+        except Exception as e:
+            st.error("找不到金鑰：雲端 Secrets 或本地 creds.json 皆無效。")
+            return None
+            
+    return gspread.authorize(creds)
 
 @st.cache_data(ttl=5)
 def load_data():
