@@ -8,10 +8,10 @@ import time
 # 頁面配置
 st.set_page_config(page_title="2026 年度跟刀記錄管理系統", layout="wide")
 
-# --- CSS 視覺對齊修正：針對備註區塊垂直補償 ---
+# --- CSS 視覺對齊修正：針對備註區塊垂直位移 ---
 st.markdown("""
     <style>
-    /* 1. 標題與基礎容器 */
+    /* 1. 基礎容器優化 */
     .block-container { padding-top: 1.5rem !important; max-width: 1100px; }
     h1 { text-align: center; font-size: 28px !important; margin-bottom: 20px !important; }
 
@@ -23,25 +23,23 @@ st.markdown("""
     
     label { font-size: 14px !important; font-weight: bold !important; color: #34495e !important; }
 
-    /* 3. 按鈕塊狀垂直位移修正 */
+    /* 3. 按鈕垂直對齊核心：向上位移並鎖定高度 */
+    div.stButton {
+        transform: translateY(-28px) !important; /* 加強位移量，對齊 Label 頂端 */
+    }
+
     div.stButton > button {
         width: 100%; 
-        height: 78px !important; /* 維持高大的塊狀 */
+        height: 82px !important; /* 精確補償高度：標籤(24px) + 間距(20px) + 輸入框(38px) */
         font-size: 18px !important; 
         font-weight: bold !important; 
         background-color: #007bff; 
         color: white; 
         border-radius: 6px;
-        /* 核心修正：將按鈕位置向上位移，抵銷 Label 產生的垂直落差 */
-        transform: translateY(-22px) !important;
+        border: none !important;
     }
 
-    /* 確保表單底部的空間不會因為位移而產生多餘留白 */
-    [data-testid="stFormSubmitButton"] {
-        height: 56px !important; 
-    }
-
-    /* 確保所有欄位底部鎖死 */
+    /* 確保欄位底部對齊 */
     [data-testid="column"] {
         display: flex;
         align-items: flex-end;
@@ -81,7 +79,7 @@ def main():
 
     with tab1:
         with st.form("main_form", clear_on_submit=True):
-            # 內容區域
+            # 內容輸入區
             c1, c2, c3 = st.columns(3)
             with c1:
                 f_date = st.date_input("使用日期", datetime.now()) 
@@ -104,12 +102,11 @@ def main():
             with c5: f_blood = st.selectbox("抽血人員", LIST_BLOOD, index=0)
             with c6: f_staff = st.text_input("跟刀(操作)人員")
 
-            # --- 第三區：備註與按鈕垂直偏移校正 ---
+            # --- 第三區：備註與按鈕對齊（終極位移修正） ---
             c7, c8, spacer = st.columns([6.5, 2.5, 1.0]) 
             with c7:
                 f_note = st.text_area("備註")
             with c8:
-                # 透過上面的 CSS transform 將此按鈕上移對齊 Label
                 submit_btn = st.form_submit_button("🚀 提交數據")
 
             if submit_btn:
